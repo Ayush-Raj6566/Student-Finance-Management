@@ -1,0 +1,388 @@
+import React, { useState, useEffect } from 'react';
+import { useAuth } from '../context/AuthContext';
+import { useNavigate } from 'react-router-dom';
+import { apiService } from '../utils/api';
+import Sidebar from './Sidebar';
+import { 
+  Menu, 
+  User, 
+  LogOut, 
+  Send,
+  Calendar,
+  DollarSign,
+  TrendingDown,
+  Bot,
+  Plus,
+  Hash,
+  CreditCard,
+  Tag
+} from 'lucide-react';
+import { Transaction } from '../types';
+
+const Dashboard: React.FC = () => {
+  const { user, logout } = useAuth();
+  const navigate = useNavigate();
+  const [sidebarOpen, setSidebarOpen] = useState(false);
+  const [selectedYear, setSelectedYear] = useState(new Date().getFullYear());
+  const [selectedMonth, setSelectedMonth] = useState('');
+  const [selectedDate, setSelectedDate] = useState('');
+  const [transactions, setTransactions] = useState<Transaction[]>([]);
+  const [filteredTransactions, setFilteredTransactions] = useState<Transaction[]>([]);
+  const [chatQuery, setChatQuery] = useState('');
+  const [chatResponse, setChatResponse] = useState('');
+  const [loading, setLoading] = useState(true);
+  const [monthlyReport, setMonthlyReport] = useState({
+    totalSpent: 0,
+    categoryBreakdown: {},
+    totalIncome: 0,
+    netBalance: 0
+  });
+
+  const handleLogout = () => {
+    logout();
+    navigate('/login');
+  };
+
+  const handleProfileClick = () => {
+    navigate('/profile');
+  };
+
+  const handleAddTransaction = () => {
+    navigate('/add-transaction');
+  };
+
+  const handleChatSubmit = async () => {
+    if (!chatQuery.trim()) return;
+    
+    try {
+      const response = await apiService.askBot(chatQuery);
+      setChatResponse(response.answer || "I'm here to help with your finance questions!");
+    } catch (error) {
+      setChatResponse("Sorry, I'm having trouble connecting right now. Please try again later.");
+    }
+  };
+
+  const currentYear = new Date().getFullYear();
+  const years = Array.from({ length: 5 }, (_, i) => currentYear - 2 + i);
+  const months = [
+    { value: '', label: 'All Months' },
+    { value: '1', label: 'January' },
+    { value: '2', label: 'February' },
+    { value: '3', label: 'March' },
+    { value: '4', label: 'April' },
+    { value: '5', label: 'May' },
+    { value: '6', label: 'June' },
+    { value: '7', label: 'July' },
+    { value: '8', label: 'August' },
+    { value: '9', label: 'September' },
+    { value: '10', label: 'October' },
+    { value: '11', label: 'November' },
+    { value: '12', label: 'December' }
+  ];
+
+  useEffect(() => {
+    fetchTransactions();
+  }, []);
+
+  const fetchTransactions = async () => {
+    try {
+      setLoading(true);
+      const filters = {
+        year: selectedYear,
+        month: selectedMonth ? parseInt(selectedMonth) : undefined,
+        date: selectedDate || undefined
+      };
+      
+      const response = await apiService.getTransactions(filters);
+      setTransactions(response.transactions || []);
+    } catch (error) {
+      console.error('Error fetching transactions:', error);
+      setTransactions([]);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  useEffect(() => {
+    fetchTransactions();
+  }, [selectedYear, selectedMonth, selectedDate]);
+
+  useEffect(() => {
+    const fetchMonthlyReport = async () => {
+      try {
+        const month = selectedMonth ? parseInt(selectedMonth) : new Date().getMonth() + 1;
+        const report = await apiService.getMonthlyReport(month, selectedYear);
+        setMonthlyReport({
+          totalSpent: report.totalSpent || 0,
+          categoryBreakdown: report.categoryBreakdown || {},
+          totalIncome: report.totalIncome || 0,
+          netBalance: report.netBalance || 0
+        });
+      } catch (error) {
+        console.error('Error fetching monthly report:', error);
+        setMonthlyReport({
+          totalSpent: 0,
+          categoryBreakdown: {},
+          totalIncome: 0,
+          netBalance: 0
+        });
+      }
+    };
+    
+    fetchMonthlyReport();
+  }, [selectedMonth, selectedYear]);
+
+  return (
+    <div className="min-h-screen bg-slate-900 text-white">
+      <Sidebar isOpen={sidebarOpen} onClose={() => setSidebarOpen(false)} />
+      
+      {/* Header */}
+      <div className="bg-slate-800/50 border-b border-slate-700 p-4">
+        <div className="flex items-center justify-between">
+          <div className="flex items-center space-x-4">
+            <button 
+              onClick={() => setSidebarOpen(true)}
+              className="p-2 hover:bg-slate-700 rounded-lg transition-colors"
+            >
+              <Menu className="w-6 h-6" />
+            </button>
+            <h1 className="text-xl font-bold">Student Finance Manager</h1>
+          </div>
+          
+          <div className="flex items-center space-x-4">
+            <button
+              onClick={handleProfileClick}
+              className="flex items-center space-x-2 bg-slate-700/50 hover:bg-slate-600/50 px-3 py-2 rounded-lg transition-colors"
+            >
+              <User className="w-5 h-5 text-blue-400" />
+              <span className="text-sm">{user?.name}</span>
+            </button>
+            <button
+              onClick={handleLogout}
+              className="p-2 hover:bg-slate-700 rounded-lg transition-colors text-red-400"
+            >
+              <LogOut className="w-5 h-5" />
+            </button>
+          </div>
+        </div>
+      </div>
+
+      <div className="p-6 space-y-6">
+        {/* Main Content Grid */}
+        <div className="grid grid-cols-1 xl:grid-cols-3 gap-6">
+          
+          {/* Left Column - Transaction Filters and Table */}
+          <div className="xl:col-span-2 space-y-6">
+            
+            {/* Date Filters and Add Button */}
+            <div className="bg-slate-800/50 border border-slate-700 rounded-2xl p-6">
+              <h2 className="text-lg font-semibold mb-4 text-blue-400">Transaction Filters</h2>
+              <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-6">
+                <div>
+                  <label className="block text-sm font-medium text-slate-300 mb-2">Year</label>
+                  <select
+                    value={selectedYear}
+                    onChange={(e) => setSelectedYear(Number(e.target.value))}
+                    className="w-full bg-slate-700 border border-slate-600 rounded-lg px-3 py-2 text-white focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  >
+                    {years.map(year => (
+                      <option key={year} value={year}>{year}</option>
+                    ))}
+                  </select>
+                </div>
+                
+                <div>
+                  <label className="block text-sm font-medium text-slate-300 mb-2">Month</label>
+                  <select
+                    value={selectedMonth}
+                    onChange={(e) => setSelectedMonth(e.target.value)}
+                    className="w-full bg-slate-700 border border-slate-600 rounded-lg px-3 py-2 text-white focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  >
+                    {months.map((month) => (
+                      <option key={month.value} value={month.value}>{month.label}</option>
+                    ))}
+                  </select>
+                </div>
+                
+                <div>
+                  <label className="block text-sm font-medium text-slate-300 mb-2">Date</label>
+                  <input
+                    type="date"
+                    value={selectedDate}
+                    onChange={(e) => setSelectedDate(e.target.value)}
+                    className="w-full bg-slate-700 border border-slate-600 rounded-lg px-3 py-2 text-white focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  />
+                </div>
+
+                <div>
+                  <label className="block text-sm font-medium text-slate-300 mb-2">Action</label>
+                  <button
+                    onClick={handleAddTransaction}
+                    className="w-full bg-green-600 hover:bg-green-700 text-white font-semibold py-2 rounded-lg transition-all duration-200 transform hover:scale-[1.02] flex items-center justify-center space-x-2"
+                  >
+                    <Plus className="w-4 h-4" />
+                    <span>Add</span>
+                  </button>
+                </div>
+              </div>
+
+              {/* Transaction Table */}
+              <div className="bg-slate-700/30 rounded-lg overflow-hidden">
+                <div className="grid grid-cols-3 gap-4 p-4 bg-slate-600/50 border-b border-slate-600">
+                  <div className="flex items-center space-x-2 font-semibold text-slate-200">
+                    <Hash className="w-4 h-4" />
+                    <span>Transaction ID</span>
+                  </div>
+                  <div className="flex items-center space-x-2 font-semibold text-slate-200">
+                    <DollarSign className="w-4 h-4" />
+                    <span>Transaction Amount</span>
+                  </div>
+                  <div className="flex items-center space-x-2 font-semibold text-slate-200">
+                    <Tag className="w-4 h-4" />
+                    <span>Transaction Category</span>
+                  </div>
+                </div>
+                
+                <div className="max-h-96 overflow-y-auto">
+                  {loading ? (
+                    <div className="p-8 text-center text-slate-400">
+                      <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-500 mx-auto mb-2"></div>
+                      <p>Loading transactions...</p>
+                    </div>
+                  ) : transactions.length === 0 ? (
+                    <div className="p-8 text-center text-slate-400">
+                      <CreditCard className="w-12 h-12 mx-auto mb-2 opacity-50" />
+                      <p>No transactions found for the selected filters</p>
+                    </div>
+                  ) : (
+                    transactions.map((transaction) => (
+                      <div key={transaction.id} className="grid grid-cols-3 gap-4 p-4 border-b border-slate-600/50 hover:bg-slate-600/30 transition-colors">
+                        <div className="text-blue-400 font-mono text-sm">
+                          {transaction.id}
+                        </div>
+                        <div className={`font-semibold ${transaction.type === 'income' ? 'text-green-400' : 'text-red-400'}`}>
+                          {transaction.type === 'income' ? '+' : '-'}${transaction.amount.toFixed(2)}
+                        </div>
+                        <div className="text-slate-300">
+                          <span className="bg-slate-600 px-2 py-1 rounded text-xs">
+                            {transaction.category}
+                          </span>
+                        </div>
+                      </div>
+                    ))
+                  )}
+                </div>
+              </div>
+            </div>
+          </div>
+
+          {/* Right Column */}
+          <div className="space-y-6">
+            
+                  ${monthlyReport.totalSpent.toFixed(2)}
+            <div className="bg-slate-800/50 border border-slate-700 rounded-2xl p-6">
+              <h2 className="text-lg font-semibold mb-4 text-blue-400">Monthly Report</h2>
+              
+              <div className="space-y-4">
+                <div className="bg-slate-700/30 rounded-lg p-4">
+                  <div className="flex items-center space-x-2 mb-2">
+                    <DollarSign className="w-5 h-5 text-green-400" />
+                    <span className="text-sm font-medium text-slate-300">Total Spent in Current Month</span>
+                  </div>
+                  <p className="text-2xl font-bold text-white">
+                    ${filteredTransactions.filter(t => t.type === 'expense').reduce((sum, t) => sum + t.amount, 0).toFixed(2)}
+                  </p>
+                </div>
+                
+                <div className="bg-slate-700/30 rounded-lg p-4">
+                  <div className="flex items-center space-x-2 mb-2">
+                    <TrendingDown className="w-5 h-5 text-orange-400" />
+                    <span className="text-sm font-medium text-slate-300">Category Wise Spent</span>
+                  </div>
+                  <div className="space-y-2">
+                    <div className="flex items-center space-x-2">
+                      <span className="bg-blue-600 text-xs px-2 py-1 rounded">Category(Mens)</span>
+                      <span className="bg-green-600 text-xs px-2 py-1 rounded">Type(Spending)</span>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            {/* Student Profile */}
+            <div className="bg-slate-800/50 border border-slate-700 rounded-2xl p-6">
+              <h2 className="text-lg font-semibold mb-4 text-blue-400">Student Profile</h2>
+              <div className="space-y-3">
+                <div>
+                  <span className="text-sm text-slate-400">Student Name</span>
+                  <p className="text-white font-medium">{user?.name}</p>
+                </div>
+                <div>
+                  <span className="text-sm text-slate-400">Student Email</span>
+                  <p className="text-white font-medium">{user?.email}</p>
+                </div>
+                <div>
+                  <span className="text-sm text-slate-400">Member Since</span>
+                  <p className="text-white font-medium">
+                    {user?.memberSince ? new Date(user.memberSince).toLocaleDateString() : 'N/A'}
+                  </p>
+                  {Object.entries(monthlyReport.categoryBreakdown).length === 0 ? (
+                    <p className="text-slate-400 text-sm">No category data available</p>
+                  ) : (
+                    Object.entries(monthlyReport.categoryBreakdown).map(([category, amount]) => (
+                      <div key={category} className="flex justify-between items-center">
+                        <span className="bg-blue-600 text-xs px-2 py-1 rounded">{category}</span>
+                        <span className="text-white font-medium">${(amount as number).toFixed(2)}</span>
+                      </div>
+                    ))
+                  )}
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        {/* AI Chat Bot */}
+        <div className="bg-slate-800/50 border border-slate-700 rounded-2xl p-6">
+          <div className="flex items-center space-x-2 mb-4">
+            <div className="w-8 h-8 bg-blue-600 rounded-full flex items-center justify-center">
+              <Bot className="w-5 h-5 text-white" />
+            </div>
+            <h2 className="text-lg font-semibold text-blue-400">Let's chat about your Expenditure</h2>
+          </div>
+          
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+            <div>
+              <label className="block text-sm font-medium text-slate-300 mb-2">Student Query</label>
+              <textarea
+                value={chatQuery}
+                onChange={(e) => setChatQuery(e.target.value)}
+                placeholder="Ask me anything about your finances..."
+                className="w-full h-24 bg-slate-700 border border-slate-600 rounded-lg px-3 py-2 text-white placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-blue-500 resize-none"
+              />
+            </div>
+            
+            <div>
+              <label className="block text-sm font-medium text-slate-300 mb-2">Bot's Answer</label>
+              <div className="h-24 bg-slate-700/30 border border-slate-600 rounded-lg px-3 py-2 text-slate-300 overflow-y-auto">
+                {chatResponse || "Ask me a question and I'll help you understand your spending patterns!"}
+              </div>
+            </div>
+          </div>
+          
+          <div className="mt-4 flex justify-end">
+            <button
+              onClick={handleChatSubmit}
+              className="flex items-center space-x-2 bg-blue-600 hover:bg-blue-700 px-4 py-2 rounded-lg transition-colors"
+            >
+              <Send className="w-4 h-4" />
+              <span>Ask</span>
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+};
+
+export default Dashboard;
