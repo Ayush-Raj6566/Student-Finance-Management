@@ -1,18 +1,18 @@
-import React from 'react';
+
 import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
 import { AuthProvider } from './context/AuthContext';
 import Login from './components/Login';
 import Signup from './components/Signup';
 import Dashboard from './components/Dashboard';
 import AddTransaction from './components/AddTransaction';
-import ChatBot from './components/ChatBot';
+// import ChatBot from './components/ChatBot';
 import Profile from './components/Profile';
 import Transactions from './components/Transactions';
-import Reports from './components/Reports';
-import Analytics from './components/Analytics';
-import Budget from './components/Budget';
-import Settings from './components/Settings';
-import Help from './components/Help';
+// import Reports from './components/Reports';
+// import Analytics from './components/Analytics';
+// import Budget from './components/Budget';
+// import Settings from './components/Settings';
+// import Help from './components/Help';
 import ProtectedRoute from './components/ProtectedRoute';
 
 function App() {
@@ -39,14 +39,14 @@ function App() {
                 </ProtectedRoute>
               } 
             />
-            <Route 
+            {/* <Route 
               path="/chat" 
               element={
                 <ProtectedRoute>
                   <ChatBot />
                 </ProtectedRoute>
               } 
-            />
+            /> */}
             <Route 
               path="/profile" 
               element={
@@ -63,46 +63,46 @@ function App() {
                 </ProtectedRoute>
               } 
             />
-            <Route 
+            {/* <Route 
               path="/reports" 
               element={
                 <ProtectedRoute>
                   <Reports />
                 </ProtectedRoute>
               } 
-            />
-            <Route 
+            /> */}
+            {/* <Route 
               path="/analytics" 
               element={
                 <ProtectedRoute>
                   <Analytics />
                 </ProtectedRoute>
               } 
-            />
-            <Route 
+            /> */}
+            {/* <Route 
               path="/budget" 
               element={
                 <ProtectedRoute>
                   <Budget />
                 </ProtectedRoute>
               } 
-            />
-            <Route 
+            /> */}
+            {/* <Route 
               path="/settings" 
               element={
                 <ProtectedRoute>
                   <Settings />
                 </ProtectedRoute>
               } 
-            />
-            <Route 
+            /> */}
+            {/* <Route 
               path="/help" 
               element={
                 <ProtectedRoute>
                   <Help />
                 </ProtectedRoute>
               } 
-            />
+            /> */}
             <Route path="/" element={<Navigate to="/login" replace />} />
           </Routes>
         </div>

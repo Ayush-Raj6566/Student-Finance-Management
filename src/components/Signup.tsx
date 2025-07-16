@@ -1,13 +1,12 @@
 import React, { useState } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
 import { apiService } from '../utils/api';
-import { Mail, Lock, User, Eye, EyeOff, GraduationCap, Hash } from 'lucide-react';
+import { Mail, Lock, User, Eye, EyeOff, GraduationCap} from 'lucide-react';
 
 const Signup: React.FC = () => {
   const [formData, setFormData] = useState({
-    name: '',
-    email: '',
-    studentId: '',
+    student_name: '',
+    student_email: '',
     password: '',
     confirmPassword: ''
   });
@@ -70,8 +69,8 @@ const Signup: React.FC = () => {
                 <User className="absolute left-3 top-1/2 transform -translate-y-1/2 w-5 h-5 text-slate-400" />
                 <input
                   type="text"
-                  name="name"
-                  value={formData.name}
+                  name="student_name"
+                  value={formData.student_name}
                   onChange={handleInputChange}
                   className="w-full pl-10 pr-4 py-3 bg-slate-700/50 border border-slate-600 rounded-xl text-white placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all"
                   placeholder="John Doe"
@@ -88,29 +87,11 @@ const Signup: React.FC = () => {
                 <Mail className="absolute left-3 top-1/2 transform -translate-y-1/2 w-5 h-5 text-slate-400" />
                 <input
                   type="email"
-                  name="email"
-                  value={formData.email}
+                  name="student_email"
+                  value={formData.student_email}
                   onChange={handleInputChange}
                   className="w-full pl-10 pr-4 py-3 bg-slate-700/50 border border-slate-600 rounded-xl text-white placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all"
                   placeholder="john@university.edu"
-                  required
-                />
-              </div>
-            </div>
-
-            <div>
-              <label className="block text-sm font-medium text-slate-300 mb-2">
-                Student ID
-              </label>
-              <div className="relative">
-                <Hash className="absolute left-3 top-1/2 transform -translate-y-1/2 w-5 h-5 text-slate-400" />
-                <input
-                  type="text"
-                  name="studentId"
-                  value={formData.studentId}
-                  onChange={handleInputChange}
-                  className="w-full pl-10 pr-4 py-3 bg-slate-700/50 border border-slate-600 rounded-xl text-white placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all"
-                  placeholder="STU2024001"
                   required
                 />
               </div>

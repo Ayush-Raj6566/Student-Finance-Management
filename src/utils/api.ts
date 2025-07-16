@@ -1,54 +1,36 @@
-const API_BASE_URL = import.meta.env.VITE_BACKEND_URL || 'http://localhost:3001/api';
-
-// Dummy credentials for login (temporary - can be removed when backend auth is ready)
-export const DUMMY_CREDENTIALS = {
-  email: 'student@university.edu',
-  password: 'password123'
-};
+const API_BASE_URL = import.meta.env.VITE_BACKEND_URL || 'https://studget.onrender.com';
+import axios from 'axios';
 
 export const apiService = {
-  // Authentication endpoints
-  login: async (email: string, password: string) => {
-    try {
-      // Try backend authentication first
-      const response = await fetch(`${API_BASE_URL}/auth/login`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ email, password })
-      });
-      
-      if (response.ok) {
-        const data = await response.json();
-        return {
-          success: true,
-          user: data.user,
-          token: data.token
-        };
-      }
-    } catch (error) {
-      console.log('Backend not available, using dummy credentials');
-    }
-    
-    // Fallback to dummy credentials for demo
-    if (email === DUMMY_CREDENTIALS.email && password === DUMMY_CREDENTIALS.password) {
+  // ✅ Authentication endpoints
+  login: async (student_email: string, password: string) => {
+  try {
+    const response = await fetch(`${API_BASE_URL}/auth/login`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ student_email, password })
+    });
+
+    if (response.ok) {
+      const result = await response.json();
       return {
         success: true,
-        user: {
-          id: '1',
-          name: 'John Doe',
-          email: 'student@university.edu',
-          memberSince: '2023-01-15',
-          studentId: 'STU2023001'
-        }
+        token: result.data.access_token,
+        tokenType: result.data.token_type,
+        message: result.message
       };
+    } else {
+      throw new Error('Invalid credentials');
     }
-    throw new Error('Invalid credentials');
-  },
+  } catch (error) {
+    throw new Error('Login failed');
+  }
+},
+
 
   signup: async (userData: {
-    name: string;
-    email: string;
-    studentId: string;
+    student_name: string;
+    student_email: string;
     password: string;
   }) => {
     const response = await fetch(`${API_BASE_URL}/auth/signup`, {
@@ -56,335 +38,309 @@ export const apiService = {
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify(userData)
     });
-    
+
+    const data = await response.json();
+
     if (!response.ok) {
-      throw new Error('Failed to create account');
+      const msg = data?.detail?.[0]?.msg || data?.message || 'Failed to create account';
+      throw new Error(msg);
     }
-    
-    return response.json();
+
+    return data;
   },
 
-  // User profile endpoints
-  getUserProfile: async (userId: string) => {
-    const response = await fetch(`${API_BASE_URL}/users/${userId}`, {
-      headers: { 
+  // ✅ Profile
+  getUserProfile: async () => {
+    const response = await fetch(`${API_BASE_URL}/profile/student_profile`, {
+      headers: {
         'Authorization': `Bearer ${localStorage.getItem('token')}`,
         'Content-Type': 'application/json'
       }
     });
-    
-    if (!response.ok) {
-      throw new Error('Failed to fetch user profile');
-    }
-    
+
+    if (!response.ok) throw new Error('Failed to fetch user profile');
+
     return response.json();
   },
 
-  updateUserProfile: async (userId: string, userData: any) => {
-    const response = await fetch(`${API_BASE_URL}/users/${userId}`, {
+  updateUserProfile: async (userData: any) => {
+    const response = await fetch(`${API_BASE_URL}/profile/student_profile`, {
       method: 'PUT',
-      headers: { 
+      headers: {
         'Authorization': `Bearer ${localStorage.getItem('token')}`,
         'Content-Type': 'application/json'
       },
       body: JSON.stringify(userData)
     });
-    
-    if (!response.ok) {
-      throw new Error('Failed to update profile');
-    }
-    
+
+    if (!response.ok) throw new Error('Failed to update profile');
+
     return response.json();
   },
 
-  // Transaction endpoints
-  getTransactions: async (filters: {
-    year?: number;
-    month?: number;
-    date?: string;
-    type?: 'income' | 'expense' | 'all';
-    category?: string;
-    search?: string;
-    limit?: number;
-    offset?: number;
-  }) => {
-    const queryParams = new URLSearchParams();
-    Object.entries(filters).forEach(([key, value]) => {
-      if (value !== undefined && value !== null && value !== '') {
-        queryParams.append(key, value.toString());
-      }
+  // ✅ Transactions
+getTransactions: async (filters: { student_id: string; year?: number; month?: number; curr_date?: string }) => {
+  try {
+    const token = localStorage.getItem('token');
+    if (!token) throw new Error('No auth token found');
+
+    const response = await fetch(`${API_BASE_URL}/home/get_transactions`, {
+      method: 'POST',
+      headers: {
+        'Authorization': `Bearer ${token}`,
+        'Content-Type': 'application/json'
+      },
+      body: JSON.stringify(filters)
     });
 
-    const response = await fetch(`${API_BASE_URL}/transactions?${queryParams}`, {
-      headers: { 
-        'Authorization': `Bearer ${localStorage.getItem('token')}`,
-        'Content-Type': 'application/json'
-      }
-    });
-    
     if (!response.ok) {
+      const errorText = await response.text();
+      console.error('Response not OK', errorText);
       throw new Error('Failed to fetch transactions');
     }
-    
-    return response.json();
-  },
 
-  addTransaction: async (transactionData: {
-    amount: number;
-    category: string;
-    type: 'income' | 'expense';
-    description: string;
-    date: string;
-  }) => {
-    const response = await fetch(`${API_BASE_URL}/transactions`, {
+    return await response.json();
+  } catch (error) {
+    console.error('getTransactions error:', error);
+    throw new Error('Failed to fetch transactions');
+  }
+}
+
+,
+
+
+
+
+
+
+ addTransaction: async (transactionData: {
+  transaction_amount: number;
+  transaction_category: string;
+  transaction_type: 'income' | 'expense';
+  transaction_description: string;
+  transaction_date: string;
+}) => {
+
+    const response = await fetch(`${API_BASE_URL}/home/add_transaction`, {
       method: 'POST',
-      headers: { 
+      headers: {
         'Authorization': `Bearer ${localStorage.getItem('token')}`,
         'Content-Type': 'application/json'
       },
       body: JSON.stringify(transactionData)
     });
-    
-    if (!response.ok) {
-      throw new Error('Failed to add transaction');
-    }
-    
-    return response.json();
-  },
 
-  updateTransaction: async (transactionId: string, transactionData: any) => {
-    const response = await fetch(`${API_BASE_URL}/transactions/${transactionId}`, {
-      method: 'PUT',
-      headers: { 
-        'Authorization': `Bearer ${localStorage.getItem('token')}`,
-        'Content-Type': 'application/json'
-      },
-      body: JSON.stringify(transactionData)
-    });
-    
-    if (!response.ok) {
-      throw new Error('Failed to update transaction');
-    }
-    
-    return response.json();
-  },
+    if (!response.ok) throw new Error('Failed to add transaction');
 
-  deleteTransaction: async (transactionId: string) => {
-    const response = await fetch(`${API_BASE_URL}/transactions/${transactionId}`, {
-      method: 'DELETE',
-      headers: { 
-        'Authorization': `Bearer ${localStorage.getItem('token')}`,
-        'Content-Type': 'application/json'
-      }
-    });
-    
-    if (!response.ok) {
-      throw new Error('Failed to delete transaction');
-    }
-    
     return response.json();
-  },
-
-  // Reports and analytics endpoints
-  getMonthlyReport: async (month: number, year: number) => {
-    const response = await fetch(`${API_BASE_URL}/reports/monthly?month=${month}&year=${year}`, {
-      headers: { 
-        'Authorization': `Bearer ${localStorage.getItem('token')}`,
-        'Content-Type': 'application/json'
-      }
-    });
-    
-    if (!response.ok) {
-      throw new Error('Failed to fetch monthly report');
-    }
-    
-    return response.json();
-  },
-
-  getAnalytics: async (period: 'week' | 'month' | 'quarter' | 'year') => {
-    const response = await fetch(`${API_BASE_URL}/analytics?period=${period}`, {
-      headers: { 
-        'Authorization': `Bearer ${localStorage.getItem('token')}`,
-        'Content-Type': 'application/json'
-      }
-    });
-    
-    if (!response.ok) {
-      throw new Error('Failed to fetch analytics');
-    }
-    
-    return response.json();
-  },
-
-  getCategoryBreakdown: async (period: 'week' | 'month' | 'quarter' | 'year') => {
-    const response = await fetch(`${API_BASE_URL}/analytics/categories?period=${period}`, {
-      headers: { 
-        'Authorization': `Bearer ${localStorage.getItem('token')}`,
-        'Content-Type': 'application/json'
-      }
-    });
-    
-    if (!response.ok) {
-      throw new Error('Failed to fetch category breakdown');
-    }
-    
-    return response.json();
-  },
-
-  // Budget endpoints
-  getBudgets: async () => {
-    const response = await fetch(`${API_BASE_URL}/budgets`, {
-      headers: { 
-        'Authorization': `Bearer ${localStorage.getItem('token')}`,
-        'Content-Type': 'application/json'
-      }
-    });
-    
-    if (!response.ok) {
-      throw new Error('Failed to fetch budgets');
-    }
-    
-    return response.json();
-  },
-
-  addBudget: async (budgetData: {
-    category: string;
-    amount: number;
-    period: 'monthly' | 'weekly' | 'yearly';
-  }) => {
-    const response = await fetch(`${API_BASE_URL}/budgets`, {
-      method: 'POST',
-      headers: { 
-        'Authorization': `Bearer ${localStorage.getItem('token')}`,
-        'Content-Type': 'application/json'
-      },
-      body: JSON.stringify(budgetData)
-    });
-    
-    if (!response.ok) {
-      throw new Error('Failed to add budget');
-    }
-    
-    return response.json();
-  },
-
-  updateBudget: async (budgetId: string, budgetData: any) => {
-    const response = await fetch(`${API_BASE_URL}/budgets/${budgetId}`, {
-      method: 'PUT',
-      headers: { 
-        'Authorization': `Bearer ${localStorage.getItem('token')}`,
-        'Content-Type': 'application/json'
-      },
-      body: JSON.stringify(budgetData)
-    });
-    
-    if (!response.ok) {
-      throw new Error('Failed to update budget');
-    }
-    
-    return response.json();
-  },
-
-  deleteBudget: async (budgetId: string) => {
-    const response = await fetch(`${API_BASE_URL}/budgets/${budgetId}`, {
-      method: 'DELETE',
-      headers: { 
-        'Authorization': `Bearer ${localStorage.getItem('token')}`,
-        'Content-Type': 'application/json'
-      }
-    });
-    
-    if (!response.ok) {
-      throw new Error('Failed to delete budget');
-    }
-    
-    return response.json();
-  },
-
-  // AI Chat Bot endpoint
-  askBot: async (query: string) => {
-    const response = await fetch(`${API_BASE_URL}/bot/query`, {
-      method: 'POST',
-      headers: { 
-        'Authorization': `Bearer ${localStorage.getItem('token')}`,
-        'Content-Type': 'application/json'
-      },
-      body: JSON.stringify({ query })
-    });
-    
-    if (!response.ok) {
-      throw new Error('Failed to get bot response');
-    }
-    
-    return response.json();
-  },
-
-  // Categories endpoint
-  getCategories: async () => {
-    const response = await fetch(`${API_BASE_URL}/categories`, {
-      headers: { 
-        'Authorization': `Bearer ${localStorage.getItem('token')}`,
-        'Content-Type': 'application/json'
-      }
-    });
-    
-    if (!response.ok) {
-      throw new Error('Failed to fetch categories');
-    }
-    
-    return response.json();
-  },
-
-  // Settings endpoints
-  getUserSettings: async () => {
-    const response = await fetch(`${API_BASE_URL}/settings`, {
-      headers: { 
-        'Authorization': `Bearer ${localStorage.getItem('token')}`,
-        'Content-Type': 'application/json'
-      }
-    });
-    
-    if (!response.ok) {
-      throw new Error('Failed to fetch settings');
-    }
-    
-    return response.json();
-  },
-
-  updateUserSettings: async (settings: {
-    notifications?: boolean;
-    darkMode?: boolean;
-    currency?: string;
-  }) => {
-    const response = await fetch(`${API_BASE_URL}/settings`, {
-      method: 'PUT',
-      headers: { 
-        'Authorization': `Bearer ${localStorage.getItem('token')}`,
-        'Content-Type': 'application/json'
-      },
-      body: JSON.stringify(settings)
-    });
-    
-    if (!response.ok) {
-      throw new Error('Failed to update settings');
-    }
-    
-    return response.json();
-  },
-
-  // Export data endpoint
-  exportData: async (format: 'csv' | 'json' | 'pdf') => {
-    const response = await fetch(`${API_BASE_URL}/export?format=${format}`, {
-      headers: { 
-        'Authorization': `Bearer ${localStorage.getItem('token')}`,
-        'Content-Type': 'application/json'
-      }
-    });
-    
-    if (!response.ok) {
-      throw new Error('Failed to export data');
-    }
-    
-    return response.blob();
   }
 };
+
+//   updateTransaction: async (transactionId: string, transactionData: any) => {
+//     const response = await fetch(`${API_BASE_URL}/transactions/${transactionId}`, {
+//       method: 'PUT',
+//       headers: {
+//         'Authorization': `Bearer ${localStorage.getItem('token')}`,
+//         'Content-Type': 'application/json'
+//       },
+//       body: JSON.stringify(transactionData)
+//     });
+
+//     if (!response.ok) throw new Error('Failed to update transaction');
+
+//     return response.json();
+//   },
+
+//   deleteTransaction: async (transactionId: string) => {
+//     const response = await fetch(`${API_BASE_URL}/transactions/${transactionId}`, {
+//       method: 'DELETE',
+//       headers: {
+//         'Authorization': `Bearer ${localStorage.getItem('token')}`,
+//         'Content-Type': 'application/json'
+//       }
+//     });
+
+//     if (!response.ok) throw new Error('Failed to delete transaction');
+
+//     return response.json();
+//   },
+
+//   // ✅ Reports
+//   getMonthlyReport: async (month: number, year: number) => {
+//     const response = await fetch(`${API_BASE_URL}/reports/monthly?month=${month}&year=${year}`, {
+//       headers: {
+//         'Authorization': `Bearer ${localStorage.getItem('token')}`,
+//         'Content-Type': 'application/json'
+//       }
+//     });
+
+//     if (!response.ok) throw new Error('Failed to fetch monthly report');
+
+//     return response.json();
+//   },
+
+//   getAnalytics: async (period: 'week' | 'month' | 'quarter' | 'year') => {
+//     const response = await fetch(`${API_BASE_URL}/analytics?period=${period}`, {
+//       headers: {
+//         'Authorization': `Bearer ${localStorage.getItem('token')}`,
+//         'Content-Type': 'application/json'
+//       }
+//     });
+
+//     if (!response.ok) throw new Error('Failed to fetch analytics');
+
+//     return response.json();
+//   },
+
+//   getCategoryBreakdown: async (period: 'week' | 'month' | 'quarter' | 'year') => {
+//     const response = await fetch(`${API_BASE_URL}/analytics/categories?period=${period}`, {
+//       headers: {
+//         'Authorization': `Bearer ${localStorage.getItem('token')}`,
+//         'Content-Type': 'application/json'
+//       }
+//     });
+
+//     if (!response.ok) throw new Error('Failed to fetch category breakdown');
+
+//     return response.json();
+//   },
+
+//   // ✅ Budgets
+//   getBudgets: async () => {
+//     const response = await fetch(`${API_BASE_URL}/budgets`, {
+//       headers: {
+//         'Authorization': `Bearer ${localStorage.getItem('token')}`,
+//         'Content-Type': 'application/json'
+//       }
+//     });
+
+//     if (!response.ok) throw new Error('Failed to fetch budgets');
+
+//     return response.json();
+//   },
+
+//   addBudget: async (budgetData: {
+//     category: string;
+//     amount: number;
+//     period: 'monthly' | 'weekly' | 'yearly';
+//   }) => {
+//     const response = await fetch(`${API_BASE_URL}/budgets`, {
+//       method: 'POST',
+//       headers: {
+//         'Authorization': `Bearer ${localStorage.getItem('token')}`,
+//         'Content-Type': 'application/json'
+//       },
+//       body: JSON.stringify(budgetData)
+//     });
+
+//     if (!response.ok) throw new Error('Failed to add budget');
+
+//     return response.json();
+//   },
+
+//   updateBudget: async (budgetId: string, budgetData: any) => {
+//     const response = await fetch(`${API_BASE_URL}/budgets/${budgetId}`, {
+//       method: 'PUT',
+//       headers: {
+//         'Authorization': `Bearer ${localStorage.getItem('token')}`,
+//         'Content-Type': 'application/json'
+//       },
+//       body: JSON.stringify(budgetData)
+//     });
+
+//     if (!response.ok) throw new Error('Failed to update budget');
+
+//     return response.json();
+//   },
+
+//   deleteBudget: async (budgetId: string) => {
+//     const response = await fetch(`${API_BASE_URL}/budgets/${budgetId}`, {
+//       method: 'DELETE',
+//       headers: {
+//         'Authorization': `Bearer ${localStorage.getItem('token')}`,
+//         'Content-Type': 'application/json'
+//       }
+//     });
+
+//     if (!response.ok) throw new Error('Failed to delete budget');
+
+//     return response.json();
+//   },
+
+//   // ✅ AI Chat Bot
+//   askBot: async (query: string) => {
+//     const response = await fetch(`${API_BASE_URL}/bot/query`, {
+//       method: 'POST',
+//       headers: {
+//         'Authorization': `Bearer ${localStorage.getItem('token')}`,
+//         'Content-Type': 'application/json'
+//       },
+//       body: JSON.stringify({ query })
+//     });
+
+//     if (!response.ok) throw new Error('Failed to get bot response');
+
+//     return response.json();
+//   },
+
+//   // ✅ Categories
+//   getCategories: async () => {
+//     const response = await fetch(`${API_BASE_URL}/categories`, {
+//       headers: {
+//         'Authorization': `Bearer ${localStorage.getItem('token')}`,
+//         'Content-Type': 'application/json'
+//       }
+//     });
+
+//     if (!response.ok) throw new Error('Failed to fetch categories');
+
+//     return response.json();
+//   },
+
+//   // ✅ Settings
+//   getUserSettings: async () => {
+//     const response = await fetch(`${API_BASE_URL}/settings`, {
+//       headers: {
+//         'Authorization': `Bearer ${localStorage.getItem('token')}`,
+//         'Content-Type': 'application/json'
+//       }
+//     });
+
+//     if (!response.ok) throw new Error('Failed to fetch settings');
+
+//     return response.json();
+//   },
+
+//   updateUserSettings: async (settings: {
+//     notifications?: boolean;
+//     darkMode?: boolean;
+//     currency?: string;
+//   }) => {
+//     const response = await fetch(`${API_BASE_URL}/settings`, {
+//       method: 'PUT',
+//       headers: {
+//         'Authorization': `Bearer ${localStorage.getItem('token')}`,
+//         'Content-Type': 'application/json'
+//       },
+//       body: JSON.stringify(settings)
+//     });
+
+//     if (!response.ok) throw new Error('Failed to update settings');
+
+//     return response.json();
+//   },
+
+//   // ✅ Export
+//   exportData: async (format: 'csv' | 'json' | 'pdf') => {
+//     const response = await fetch(`${API_BASE_URL}/export?format=${format}`, {
+//       headers: {
+//         'Authorization': `Bearer ${localStorage.getItem('token')}`,
+//         'Content-Type': 'application/json'
+//       }
+//     });
+
+//     if (!response.ok) throw new Error('Failed to export data');
+
+//     return response.blob();
+//   }
+// };

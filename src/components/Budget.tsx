@@ -1,28 +1,28 @@
-import React, { useState } from 'react';
+import React, { useState,useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { ArrowLeft, Calculator, Plus, Target, DollarSign } from 'lucide-react';
-
+import { apiService } from '../utils/api';
 const Budget: React.FC = () => {
   const navigate = useNavigate();
   const [budgets, setBudgets] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
 
-  useEffect(() => {
-    fetchBudgets();
-  }, []);
+  // useEffect(() => {
+  //   fetchBudgets();
+  // }, []);
 
-  const fetchBudgets = async () => {
-    try {
-      setLoading(true);
-      const response = await apiService.getBudgets();
-      setBudgets(response.budgets || []);
-    } catch (error) {
-      console.error('Error fetching budgets:', error);
-      setBudgets([]);
-    } finally {
-      setLoading(false);
-    }
-  };
+  // const fetchBudgets = async () => {
+  //   try {
+  //     setLoading(true);
+  //     const response = await apiService.getBudgets();
+  //     setBudgets(response.budgets || []);
+  //   } catch (error) {
+  //     console.error('Error fetching budgets:', error);
+  //     setBudgets([]);
+  //   } finally {
+  //     setLoading(false);
+  //   }
+  // };
 
   return (
     <div className="min-h-screen bg-slate-900 text-white">

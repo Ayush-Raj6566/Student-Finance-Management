@@ -8,7 +8,6 @@ import {
   User, 
   LogOut, 
   Send,
-  Calendar,
   DollarSign,
   TrendingDown,
   Bot,
@@ -25,9 +24,10 @@ const Dashboard: React.FC = () => {
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const [selectedYear, setSelectedYear] = useState(new Date().getFullYear());
   const [selectedMonth, setSelectedMonth] = useState('');
-  const [selectedDate, setSelectedDate] = useState('');
+const [selectedDate, setSelectedDate] = useState('');
+
   const [transactions, setTransactions] = useState<Transaction[]>([]);
-  const [filteredTransactions, setFilteredTransactions] = useState<Transaction[]>([]);
+  const [filteredTransactions] = useState<Transaction[]>([]);
   const [chatQuery, setChatQuery] = useState('');
   const [chatResponse, setChatResponse] = useState('');
   const [loading, setLoading] = useState(true);
@@ -51,16 +51,16 @@ const Dashboard: React.FC = () => {
     navigate('/add-transaction');
   };
 
-  const handleChatSubmit = async () => {
-    if (!chatQuery.trim()) return;
+  // const handleChatSubmit = async () => {
+  //   if (!chatQuery.trim()) return;
     
-    try {
-      const response = await apiService.askBot(chatQuery);
-      setChatResponse(response.answer || "I'm here to help with your finance questions!");
-    } catch (error) {
-      setChatResponse("Sorry, I'm having trouble connecting right now. Please try again later.");
-    }
-  };
+  //   try {
+  //     const response = await apiService.askBot(chatQuery);
+  //     setChatResponse(response.answer || "I'm here to help with your finance questions!");
+  //   } catch (error) {
+  //     setChatResponse("Sorry, I'm having trouble connecting right now. Please try again later.");
+  //   }
+  // };
 
   const currentYear = new Date().getFullYear();
   const years = Array.from({ length: 5 }, (_, i) => currentYear - 2 + i);
@@ -84,53 +84,77 @@ const Dashboard: React.FC = () => {
     fetchTransactions();
   }, []);
 
-  const fetchTransactions = async () => {
-    try {
-      setLoading(true);
-      const filters = {
-        year: selectedYear,
-        month: selectedMonth ? parseInt(selectedMonth) : undefined,
-        date: selectedDate || undefined
-      };
-      
-      const response = await apiService.getTransactions(filters);
-      setTransactions(response.transactions || []);
-    } catch (error) {
-      console.error('Error fetching transactions:', error);
-      setTransactions([]);
-    } finally {
-      setLoading(false);
+const fetchTransactions = async () => {
+  try {
+    setLoading(true);
+
+    if (!user?.studentId) {
+      console.warn("Student ID not available yet.");
+      return;
     }
-  };
 
-  useEffect(() => {
-    fetchTransactions();
-  }, [selectedYear, selectedMonth, selectedDate]);
+    const response = await apiService.getTransactions({
+      student_id: user.studentId,
+       year: selectedYear,
+      month: selectedMonth ? parseInt(selectedMonth) : undefined,
+      curr_date: selectedDate || undefined
+    });
 
-  useEffect(() => {
-    const fetchMonthlyReport = async () => {
-      try {
-        const month = selectedMonth ? parseInt(selectedMonth) : new Date().getMonth() + 1;
-        const report = await apiService.getMonthlyReport(month, selectedYear);
-        setMonthlyReport({
-          totalSpent: report.totalSpent || 0,
-          categoryBreakdown: report.categoryBreakdown || {},
-          totalIncome: report.totalIncome || 0,
-          netBalance: report.netBalance || 0
-        });
-      } catch (error) {
-        console.error('Error fetching monthly report:', error);
-        setMonthlyReport({
-          totalSpent: 0,
-          categoryBreakdown: {},
-          totalIncome: 0,
-          netBalance: 0
-        });
-      }
-    };
+    const transformed = (response.data || []).map((t: any) => ({
+      id: String(t.transation_id),
+      description: t.transaction_description,
+      category: t.transaction_category,
+      amount: t.transaction_amount,
+      date: t.transaction_date,
+      type: t.transaction_type
+    }));
+
+    setTransactions(transformed);
+  } catch (error) {
+    console.error('Error fetching transactions:', error);
+    setTransactions([]);
+  } finally {
+    setLoading(false);
+  }
+};
+
+
+
+
+
+
+
+
+useEffect(() => {
+  fetchTransactions();
+}, [selectedYear, selectedMonth, selectedDate]);
+
+
+
+  // useEffect(() => {
+  //   const fetchMonthlyReport = async () => {
+  //     try {
+  //       const month = selectedMonth ? parseInt(selectedMonth) : new Date().getMonth() + 1;
+  //       const report = await apiService.getMonthlyReport(month, selectedYear);
+  //       setMonthlyReport({
+  //         totalSpent: report.totalSpent || 0,
+  //         categoryBreakdown: report.categoryBreakdown || {},
+  //         totalIncome: report.totalIncome || 0,
+  //         netBalance: report.netBalance || 0
+  //       });
+  //     } catch (error) {
+  //       console.error('Error fetching monthly report:', error);
+  //       setMonthlyReport({
+  //         totalSpent: 0,
+  //         categoryBreakdown: {},
+  //         totalIncome: 0,
+  //         netBalance: 0
+  //       });
+  //     }
+  //   };
     
-    fetchMonthlyReport();
-  }, [selectedMonth, selectedYear]);
+  //   fetchMonthlyReport();
+  // }, [selectedMonth, selectedYear]);
 
   return (
     <div className="min-h-screen bg-slate-900 text-white">
@@ -372,7 +396,7 @@ const Dashboard: React.FC = () => {
           
           <div className="mt-4 flex justify-end">
             <button
-              onClick={handleChatSubmit}
+              // onClick={handleChatSubmit}
               className="flex items-center space-x-2 bg-blue-600 hover:bg-blue-700 px-4 py-2 rounded-lg transition-colors"
             >
               <Send className="w-4 h-4" />

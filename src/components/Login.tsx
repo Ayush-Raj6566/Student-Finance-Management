@@ -5,7 +5,7 @@ import { apiService } from '../utils/api';
 import { Mail, Lock, Eye, EyeOff, GraduationCap } from 'lucide-react';
 
 const Login: React.FC = () => {
-  const [email, setEmail] = useState('');
+  const [student_email, setStudentEmail] = useState('');
   const [password, setPassword] = useState('');
   const [showPassword, setShowPassword] = useState(false);
   const [loading, setLoading] = useState(false);
@@ -14,22 +14,39 @@ const Login: React.FC = () => {
   const navigate = useNavigate();
 
   const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
-    setLoading(true);
-    setError('');
+  e.preventDefault();
+  setLoading(true);
+  setError('');
 
-    try {
-      const response = await apiService.login(email, password);
-      if (response.success) {
-        login(response.user);
-        navigate('/dashboard');
-      }
-    } catch (err) {
+  try {
+    const response = await apiService.login(student_email, password);
+
+    if (response.success) {
+      localStorage.setItem('token', response.token);
+
+      // ✅ Now extract profile data correctly
+      const profileResponse = await apiService.getUserProfile();
+      const profile = profileResponse.data;
+
+      login({
+        id: profile.student_id.toString(),
+        name: profile.student_name,
+        email: profile.student_email,
+        memberSince: profile.member_since,
+        studentId: profile.student_id.toString()
+      });
+
+      navigate('/dashboard');
+    } else {
       setError('Invalid email or password');
-    } finally {
-      setLoading(false);
     }
-  };
+  } catch (err) {
+    setError('Login failed. Please try again.');
+    console.error('Login error:', err);
+  } finally {
+    setLoading(false);
+  }
+};
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-slate-900 via-blue-900 to-slate-900 flex items-center justify-center p-4">
@@ -52,8 +69,8 @@ const Login: React.FC = () => {
                 <Mail className="absolute left-3 top-1/2 transform -translate-y-1/2 w-5 h-5 text-slate-400" />
                 <input
                   type="email"
-                  value={email}
-                  onChange={(e) => setEmail(e.target.value)}
+                  value={student_email}
+                  onChange={(e) => setStudentEmail(e.target.value)}
                   className="w-full pl-10 pr-4 py-3 bg-slate-700/50 border border-slate-600 rounded-xl text-white placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all"
                   placeholder="student@university.edu"
                   required
@@ -90,14 +107,6 @@ const Login: React.FC = () => {
                 <p className="text-red-400 text-sm">{error}</p>
               </div>
             )}
-
-            <div className="bg-blue-500/10 border border-blue-500/50 rounded-xl p-3">
-              <p className="text-blue-400 text-sm">
-                <strong>Demo Credentials:</strong><br />
-                Email: student@university.edu<br />
-                Password: password123
-              </p>
-            </div>
 
             <button
               type="submit"

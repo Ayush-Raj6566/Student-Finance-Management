@@ -1,10 +1,12 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { ArrowLeft, CreditCard, Filter, Search, Plus, Calendar, DollarSign, Tag } from 'lucide-react';
+import { ArrowLeft, CreditCard, Filter, Search, Plus, Calendar, DollarSign} from 'lucide-react';
 import { Transaction } from '../types';
-
+import { apiService } from '../utils/api';
+import { useAuth } from '../context/AuthContext';
 const Transactions: React.FC = () => {
   const navigate = useNavigate();
+  const { user } = useAuth();
   const [transactions, setTransactions] = useState<Transaction[]>([]);
   const [filteredTransactions, setFilteredTransactions] = useState<Transaction[]>([]);
   const [searchTerm, setSearchTerm] = useState('');
@@ -17,17 +19,43 @@ const Transactions: React.FC = () => {
   }, []);
 
   const fetchTransactions = async () => {
-    try {
-      setLoading(true);
-      const response = await apiService.getTransactions({});
-      setTransactions(response.transactions || []);
-    } catch (error) {
-      console.error('Error fetching transactions:', error);
-      setTransactions([]);
-    } finally {
-      setLoading(false);
+  try {
+    setLoading(true);
+
+    if (!user?.studentId) {
+      console.warn("Student ID not available.");
+      return;
     }
-  };
+
+    const today = new Date();
+    const month = today.getMonth() + 1;
+    const curr_date = today.toISOString().split('T')[0]; // Format: YYYY-MM-DD
+
+    const response = await apiService.getTransactions({
+      student_id: user.studentId,
+      month,
+      curr_date
+    });
+
+    const transformed = (response || []).map((t: any) => ({
+      id: String(t.transation_id),
+      description: t.transaction_description,
+      category: t.transaction_category,
+      amount: t.transaction_amount,
+      date: t.transaction_date,
+      type: t.transaction_type
+    }));
+
+    setTransactions(transformed);
+  } catch (error) {
+    console.error('Error fetching transactions:', error);
+    setTransactions([]);
+  } finally {
+    setLoading(false);
+  }
+};
+
+
 
   useEffect(() => {
     let filtered = [...transactions];

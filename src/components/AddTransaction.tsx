@@ -1,7 +1,7 @@
-import React, { useState } from 'react';
+import React, { useState,useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { ArrowLeft, DollarSign, Tag, FileText, Plus, ChevronDown } from 'lucide-react';
-
+import { ArrowLeft, Tag, FileText, Plus, ChevronDown } from 'lucide-react';
+import { apiService } from '../utils/api';
 const AddTransaction: React.FC = () => {
   const navigate = useNavigate();
   const [transactionAmount, setTransactionAmount] = useState('');
@@ -10,22 +10,25 @@ const AddTransaction: React.FC = () => {
   const [transactionType, setTransactionType] = useState<'income' | 'expense'>('expense');
   const [showCategoryDropdown, setShowCategoryDropdown] = useState(false);
   const [loading, setLoading] = useState(false);
-  const [categories, setCategories] = useState<string[]>([]);
+  const [categories, setCategories] = useState<string[]>([
+  'Food', 'Shopping', 'Transportation', 'Entertainment', 'Health'
+]);
 
-  useEffect(() => {
-    fetchCategories();
-  }, []);
 
-  const fetchCategories = async () => {
-    try {
-      const response = await apiService.getCategories();
-      setCategories(response.categories || ['Food', 'Shopping', 'Transportation', 'Entertainment', 'Health']);
-    } catch (error) {
-      console.error('Error fetching categories:', error);
-      // Fallback categories
-      setCategories(['Food', 'Shopping', 'Transportation', 'Entertainment', 'Health']);
-    }
-  };
+  // useEffect(() => {
+  //   fetchCategories();
+  // }, []);
+
+  // const fetchCategories = async () => {
+  //   try {
+  //     const response = await apiService.getCategories();
+  //     setCategories(response.categories || ['Food', 'Shopping', 'Transportation', 'Entertainment', 'Health']);
+  //   } catch (error) {
+  //     console.error('Error fetching categories:', error);
+  //     // Fallback categories
+  //     setCategories(['Food', 'Shopping', 'Transportation', 'Entertainment', 'Health']);
+  //   }
+  // };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -33,12 +36,12 @@ const AddTransaction: React.FC = () => {
 
     try {
       const transactionData = {
-        amount: parseFloat(transactionAmount),
-        category: transactionCategory,
-        description: transactionDescription,
-        date: new Date().toISOString().split('T')[0],
-        type: transactionType
-      };
+  transaction_amount: parseFloat(transactionAmount),
+  transaction_category: transactionCategory,
+  transaction_description: transactionDescription,
+  transaction_date: new Date().toISOString().split('T')[0],
+  transaction_type: transactionType
+};
 
       await apiService.addTransaction(transactionData);
       
@@ -112,23 +115,19 @@ const AddTransaction: React.FC = () => {
               </div>
 
               {/* Transaction Amount */}
-              <div>
-                <label className="block text-sm font-medium text-slate-300 mb-3">
-                  Transaction Amount
-                </label>
-                <div className="relative">
-                  <DollarSign className="absolute left-3 top-1/2 transform -translate-y-1/2 w-5 h-5 text-slate-400" />
-                  <input
-                    type="number"
-                    step="0.01"
-                    value={transactionAmount}
-                    onChange={(e) => setTransactionAmount(e.target.value)}
-                    className="w-full pl-10 pr-4 py-4 bg-slate-700/50 border border-slate-600 rounded-xl text-white placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all text-lg"
-                    placeholder="Enter amount (e.g., 25.50)"
-                    required
-                  />
-                </div>
-              </div>
+              <div className="relative">
+  <span className="absolute left-3 top-1/2 transform -translate-y-1/2 w-5 h-5 text-slate-400 text-lg">₹</span>
+  <input
+    type="number"
+    step="0.01"
+    value={transactionAmount}
+    onChange={(e) => setTransactionAmount(e.target.value)}
+    className="w-full pl-10 pr-4 py-4 bg-slate-700/50 border border-slate-600 rounded-xl text-white placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all text-lg"
+    placeholder="Enter amount (e.g., 100.00)"
+    required
+  />
+</div>
+
 
               {/* Transaction Category */}
               <div>

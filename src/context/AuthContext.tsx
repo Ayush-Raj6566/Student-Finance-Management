@@ -11,14 +11,16 @@ interface AuthContextType {
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
 export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
-  const [user, setUser] = useState<User | null>(null);
-
-  useEffect(() => {
-    const savedUser = localStorage.getItem('user');
-    if (savedUser) {
-      setUser(JSON.parse(savedUser));
+  const [user, setUser] = useState<User | null>(() => {
+    try {
+      const savedUser = localStorage.getItem('user');
+      if (!savedUser || savedUser === 'undefined') return null;
+      return JSON.parse(savedUser);
+    } catch (err) {
+      console.error('Invalid user in localStorage:', err);
+      return null;
     }
-  }, []);
+  });
 
   const login = (userData: User) => {
     setUser(userData);
