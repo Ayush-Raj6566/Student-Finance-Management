@@ -23,14 +23,14 @@ const Sidebar: React.FC<SidebarProps> = ({ isOpen, onClose }) => {
 
   const menuItems = [
     { icon: Bot, label: 'Student Bot', path: '/chat', color: 'text-green-400' },
-    { icon: Home, label: 'Dashboard', path: '/dashboard', color: 'text-blue-400' },
-    { icon: CreditCard, label: 'Transactions', path: '/transactions', color: 'text-purple-400' },
-    { icon: PieChart, label: 'Reports', path: '/reports', color: 'text-orange-400' },
-    { icon: TrendingUp, label: 'Analytics', path: '/analytics', color: 'text-cyan-400' },
-    { icon: Calculator, label: 'Budget Planner', path: '/budget', color: 'text-yellow-400' },
-    { icon: User, label: 'Profile', path: '/profile', color: 'text-pink-400' },
-    { icon: Settings, label: 'Settings', path: '/settings', color: 'text-gray-400' },
-    { icon: HelpCircle, label: 'Help & Support', path: '/help', color: 'text-indigo-400' },
+    // { icon: Home, label: 'Dashboard', path: '/dashboard', color: 'text-blue-400' },
+    // { icon: CreditCard, label: 'Transactions', path: '/transactions', color: 'text-purple-400' },
+    // { icon: PieChart, label: 'Reports', path: '/reports', color: 'text-orange-400' },
+    // { icon: TrendingUp, label: 'Analytics', path: '/analytics', color: 'text-cyan-400' },
+    // { icon: Calculator, label: 'Budget Planner', path: '/budget', color: 'text-yellow-400' },
+    // { icon: User, label: 'Profile', path: '/profile', color: 'text-pink-400' },
+    // { icon: Settings, label: 'Settings', path: '/settings', color: 'text-gray-400' },
+    // { icon: HelpCircle, label: 'Help & Support', path: '/help', color: 'text-indigo-400' },
   ];
 
   const handleNavigation = (path: string) => {

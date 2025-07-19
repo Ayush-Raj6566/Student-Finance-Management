@@ -166,7 +166,7 @@ const Profile: React.FC = () => {
             </div>
           </div>
 
-          <div className="lg:col-span-2">
+          {/* <div className="lg:col-span-2">
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <div className="bg-slate-800/50 border border-slate-700 rounded-2xl p-6">
                 <div className="flex items-center space-x-3 mb-2">
@@ -202,11 +202,11 @@ const Profile: React.FC = () => {
                 <p className="text-2xl font-bold text-purple-400">{filteredTransactions.length}</p>
               </div>
             </div>
-          </div>
+          </div> */}
         </div>
 
         {/* Filters */}
-        <div className="bg-slate-800/50 border border-slate-700 rounded-2xl p-6">
+        {/* <div className="bg-slate-800/50 border border-slate-700 rounded-2xl p-6">
           <div className="flex items-center space-x-2 mb-4">
             <Filter className="w-5 h-5 text-blue-400" />
             <h2 className="text-lg font-semibold text-blue-400">Filter Transactions</h2>
@@ -261,10 +261,10 @@ const Profile: React.FC = () => {
               </button>
             </div>
           </div>
-        </div>
+        </div> */}
 
         {/* Transaction List */}
-        <div className="bg-slate-800/50 border border-slate-700 rounded-2xl p-6">
+        {/* <div className="bg-slate-800/50 border border-slate-700 rounded-2xl p-6">
           <h2 className="text-lg font-semibold mb-4 text-blue-400">Transaction History</h2>
           
           {loading ? (
@@ -315,7 +315,7 @@ const Profile: React.FC = () => {
               ))}
             </div>
           )}
-        </div>
+        </div> */}
       </div>
     </div>
   );

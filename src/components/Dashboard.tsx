@@ -343,7 +343,7 @@ useEffect(() => {
               </div>
             </div>
 
-            {/* Student Profile */}
+            {/* Student Profile
             <div className="bg-slate-800/50 border border-slate-700 rounded-2xl p-6">
               <h2 className="text-lg font-semibold mb-4 text-blue-400">Student Profile</h2>
               <div className="space-y-3">
@@ -360,7 +360,7 @@ useEffect(() => {
                   <p className="text-white font-medium">
                     {user?.memberSince ? new Date(user.memberSince).toLocaleDateString() : 'N/A'}
                   </p>
-                  {/* {Object.entries(monthlyReport.categoryBreakdown).length === 0 ? (
+                  {Object.entries(monthlyReport.categoryBreakdown).length === 0 ? (
                     <p className="text-slate-400 text-sm">No category data available</p>
                   ) : (
                     Object.entries(monthlyReport.categoryBreakdown).map(([category, amount]) => (
@@ -369,10 +369,10 @@ useEffect(() => {
                         <span className="text-white font-medium"> ₹{Number(amount).toFixed(2)}</span>
                       </div>
                     ))
-                  )} */}
+                  )}
                 </div>
               </div>
-            </div>
+            </div> */}
           </div>
         </div>
 
