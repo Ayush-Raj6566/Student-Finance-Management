@@ -5,7 +5,7 @@ import Login from './components/Login';
 import Signup from './components/Signup';
 import Dashboard from './components/Dashboard';
 import AddTransaction from './components/AddTransaction';
-// import ChatBot from './components/ChatBot';
+import ChatBot from './components/ChatBot';
 import Profile from './components/Profile';
 import Transactions from './components/Transactions';
 // import Reports from './components/Reports';
@@ -39,14 +39,14 @@ function App() {
                 </ProtectedRoute>
               } 
             />
-            {/* <Route 
+            <Route 
               path="/chat" 
               element={
                 <ProtectedRoute>
                   <ChatBot />
                 </ProtectedRoute>
               } 
-            /> */}
+            />
             <Route 
               path="/profile" 
               element={

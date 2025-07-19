@@ -31,12 +31,14 @@ const [selectedDate, setSelectedDate] = useState('');
   const [chatQuery, setChatQuery] = useState('');
   const [chatResponse, setChatResponse] = useState('');
   const [loading, setLoading] = useState(true);
-  const [monthlyReport, setMonthlyReport] = useState({
-    totalSpent: 0,
-    categoryBreakdown: {},
-    totalIncome: 0,
-    netBalance: 0
-  });
+const [monthlyReport, setMonthlyReport] = useState<{
+  totalSpent: number;
+  categoryBreakdown: Record<string, string>;
+}>({
+  totalSpent: 0,
+  categoryBreakdown: {}
+});
+
 
   const handleLogout = () => {
     logout();
@@ -104,7 +106,7 @@ const fetchTransactions = async () => {
       id: String(t.transation_id),
       description: t.transaction_description,
       category: t.transaction_category,
-      amount: t.transaction_amount,
+      amount: Number(t.transaction_amount), 
       date: t.transaction_date,
       type: t.transaction_type
     }));
@@ -119,42 +121,31 @@ const fetchTransactions = async () => {
 };
 
 
-
-
-
-
-
-
 useEffect(() => {
   fetchTransactions();
 }, [selectedYear, selectedMonth, selectedDate]);
 
 
 
-  // useEffect(() => {
-  //   const fetchMonthlyReport = async () => {
-  //     try {
-  //       const month = selectedMonth ? parseInt(selectedMonth) : new Date().getMonth() + 1;
-  //       const report = await apiService.getMonthlyReport(month, selectedYear);
-  //       setMonthlyReport({
-  //         totalSpent: report.totalSpent || 0,
-  //         categoryBreakdown: report.categoryBreakdown || {},
-  //         totalIncome: report.totalIncome || 0,
-  //         netBalance: report.netBalance || 0
-  //       });
-  //     } catch (error) {
-  //       console.error('Error fetching monthly report:', error);
-  //       setMonthlyReport({
-  //         totalSpent: 0,
-  //         categoryBreakdown: {},
-  //         totalIncome: 0,
-  //         netBalance: 0
-  //       });
-  //     }
-  //   };
+  useEffect(() => {
+    const fetchMonthlyReport = async () => {
+      try {
+        const report = await apiService.getMonthlyReport();
+        setMonthlyReport({
+          totalSpent: report.data.monthly_spending || 0,
+          categoryBreakdown: report.data.monthly_categorywise_spending || {}
+        });
+      } catch (error) {
+        console.error('Error fetching monthly report:', error);
+        setMonthlyReport({
+          totalSpent: 0,
+          categoryBreakdown: {}
+        });
+      }
+    };
     
-  //   fetchMonthlyReport();
-  // }, [selectedMonth, selectedYear]);
+    fetchMonthlyReport();
+  }, [transactions]);
 
   return (
     <div className="min-h-screen bg-slate-900 text-white">
@@ -303,7 +294,7 @@ useEffect(() => {
           {/* Right Column */}
           <div className="space-y-6">
             
-                  ${monthlyReport.totalSpent.toFixed(2)}
+                  {/* ₹{monthlyReport.totalSpent} */}
             <div className="bg-slate-800/50 border border-slate-700 rounded-2xl p-6">
               <h2 className="text-lg font-semibold mb-4 text-blue-400">Monthly Report</h2>
               
@@ -314,7 +305,7 @@ useEffect(() => {
                     <span className="text-sm font-medium text-slate-300">Total Spent in Current Month</span>
                   </div>
                   <p className="text-2xl font-bold text-white">
-                    ${filteredTransactions.filter(t => t.type === 'expense').reduce((sum, t) => sum + t.amount, 0).toFixed(2)}
+                   ₹{monthlyReport.totalSpent.toFixed(2)}
                   </p>
                 </div>
                 
@@ -324,9 +315,28 @@ useEffect(() => {
                     <span className="text-sm font-medium text-slate-300">Category Wise Spent</span>
                   </div>
                   <div className="space-y-2">
-                    <div className="flex items-center space-x-2">
+                    {/* <div className="flex items-center space-x-2">
                       <span className="bg-blue-600 text-xs px-2 py-1 rounded">Category(Mens)</span>
                       <span className="bg-green-600 text-xs px-2 py-1 rounded">Type(Spending)</span>
+                    </div> */}
+                    <div className="space-y-2">
+                       {Object.entries(monthlyReport.categoryBreakdown).length === 0 ? (
+                    <p className="text-slate-400 text-sm">No category data available</p>
+                  ) : (
+                    Object.entries(monthlyReport.categoryBreakdown).map(([rawKey, amount], index) => {
+                        const match = rawKey.match(/^\d+:(.+)$/);
+                          const category = match ? match[1] : rawKey;
+
+                            return (
+                             <div key={rawKey} className="flex justify-between items-center">
+                              <span className="text-slate-400 mr-2">{index + 1}.</span>
+                            <span className="bg-blue-600 text-xs px-2 py-1 rounded">{category}</span>
+                            <span className="text-white font-medium ml-auto">₹{Number(amount).toFixed(2)}</span>
+                             </div>
+                             );
+                                 })
+
+                              )}
                     </div>
                   </div>
                 </div>
@@ -350,23 +360,23 @@ useEffect(() => {
                   <p className="text-white font-medium">
                     {user?.memberSince ? new Date(user.memberSince).toLocaleDateString() : 'N/A'}
                   </p>
-                  {Object.entries(monthlyReport.categoryBreakdown).length === 0 ? (
+                  {/* {Object.entries(monthlyReport.categoryBreakdown).length === 0 ? (
                     <p className="text-slate-400 text-sm">No category data available</p>
                   ) : (
                     Object.entries(monthlyReport.categoryBreakdown).map(([category, amount]) => (
                       <div key={category} className="flex justify-between items-center">
                         <span className="bg-blue-600 text-xs px-2 py-1 rounded">{category}</span>
-                        <span className="text-white font-medium">${(amount as number).toFixed(2)}</span>
+                        <span className="text-white font-medium"> ₹{Number(amount).toFixed(2)}</span>
                       </div>
                     ))
-                  )}
+                  )} */}
                 </div>
               </div>
             </div>
           </div>
         </div>
 
-        {/* AI Chat Bot */}
+        {/* AI Chat Bot
         <div className="bg-slate-800/50 border border-slate-700 rounded-2xl p-6">
           <div className="flex items-center space-x-2 mb-4">
             <div className="w-8 h-8 bg-blue-600 rounded-full flex items-center justify-center">
@@ -403,7 +413,7 @@ useEffect(() => {
               <span>Ask</span>
             </button>
           </div>
-        </div>
+        </div> */}
       </div>
     </div>
   );

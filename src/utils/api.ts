@@ -104,13 +104,36 @@ getTransactions: async (filters: { student_id: string; year?: number; month?: nu
     console.error('getTransactions error:', error);
     throw new Error('Failed to fetch transactions');
   }
-}
+},
 
-,
+  getMonthlyReport: async () => {
+    const response = await fetch(`${API_BASE_URL}/profile/monthly_report`, {
+      headers: {
+        'Authorization': `Bearer ${localStorage.getItem('token')}`,
+        'Content-Type': 'application/json'
+      }
+    });
 
+    if (!response.ok) throw new Error('Failed to fetch monthly report');
 
+    return response.json();
+  },
 
+ // ✅ AI Chat Bot
+  askBot: async (query: string) => {
+    const response = await fetch(`${API_BASE_URL}/bot/studgetbot`, {
+      method: 'POST',
+      headers: {
+        'Authorization': `Bearer ${localStorage.getItem('token')}`,
+        'Content-Type': 'application/json'
+      },
+      body: JSON.stringify({ user_query: query })
+    });
 
+    if (!response.ok) throw new Error('Failed to get bot response');
+
+    return response.json();
+  },
 
 
  addTransaction: async (transactionData: {
@@ -165,19 +188,6 @@ getTransactions: async (filters: { student_id: string; year?: number; month?: nu
 //     return response.json();
 //   },
 
-//   // ✅ Reports
-//   getMonthlyReport: async (month: number, year: number) => {
-//     const response = await fetch(`${API_BASE_URL}/reports/monthly?month=${month}&year=${year}`, {
-//       headers: {
-//         'Authorization': `Bearer ${localStorage.getItem('token')}`,
-//         'Content-Type': 'application/json'
-//       }
-//     });
-
-//     if (!response.ok) throw new Error('Failed to fetch monthly report');
-
-//     return response.json();
-//   },
 
 //   getAnalytics: async (period: 'week' | 'month' | 'quarter' | 'year') => {
 //     const response = await fetch(`${API_BASE_URL}/analytics?period=${period}`, {
@@ -269,7 +279,7 @@ getTransactions: async (filters: { student_id: string; year?: number; month?: nu
 
 //   // ✅ AI Chat Bot
 //   askBot: async (query: string) => {
-//     const response = await fetch(`${API_BASE_URL}/bot/query`, {
+//     const response = await fetch(`${API_BASE_URL}/bot/studgetbot`, {
 //       method: 'POST',
 //       headers: {
 //         'Authorization': `Bearer ${localStorage.getItem('token')}`,

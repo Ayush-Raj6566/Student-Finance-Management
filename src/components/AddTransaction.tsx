@@ -84,35 +84,35 @@ const AddTransaction: React.FC = () => {
           <div className="bg-slate-800/50 border border-slate-700 rounded-2xl p-8">
             <form onSubmit={handleSubmit} className="space-y-6">
               {/* Transaction Type */}
-              <div>
+              {/* <div>
                 <label className="block text-sm font-medium text-slate-300 mb-3">
                   Transaction Type
                 </label>
                 <div className="grid grid-cols-2 gap-4">
-                  <button
-                    type="button"
+                                     <button
+                                         type="button"
                     onClick={() => setTransactionType('expense')}
                     className={`p-4 rounded-xl border transition-all ${
                       transactionType === 'expense'
                         ? 'bg-red-600/20 border-red-500 text-red-400'
                         : 'bg-slate-700/50 border-slate-600 text-slate-300 hover:bg-slate-600/50'
-                    }`}
-                  >
-                    Expense
-                  </button>
-                  <button
-                    type="button"
-                    onClick={() => setTransactionType('income')}
-                    className={`p-4 rounded-xl border transition-all ${
-                      transactionType === 'income'
-                        ? 'bg-green-600/20 border-green-500 text-green-400'
-                        : 'bg-slate-700/50 border-slate-600 text-slate-300 hover:bg-slate-600/50'
-                    }`}
-                  >
-                    Income
-                  </button>
-                </div>
-              </div>
+                              }`}
+                            >
+                              Expense
+                                </button>
+                           <button
+                           type="button"
+                              onClick={() => setTransactionType('income')}
+                             className={`p-4 rounded-xl border transition-all ${
+                                transactionType === 'income'
+                              ? 'bg-green-600/20 border-green-500 text-green-400'
+                             : 'bg-slate-700/50 border-slate-600 text-slate-300 hover:bg-slate-600/50'
+                           }`}
+                             >
+                              Income
+                                    </button>
+                    </div>
+              </div> */}
 
               {/* Transaction Amount */}
               <div className="relative">
