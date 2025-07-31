@@ -7,10 +7,8 @@ import {
   Menu, 
   User, 
   LogOut, 
-  Send,
   DollarSign,
   TrendingDown,
-  Bot,
   Plus,
   Hash,
   CreditCard,
@@ -39,6 +37,10 @@ const [monthlyReport, setMonthlyReport] = useState<{
   categoryBreakdown: {}
 });
 
+const [spendingIndicator, setSpendingIndicator] = useState<string | null>(null);
+const [budgetLimit, setBudgetLimit] = useState<number>(0);
+const [inputLimit, setInputLimit] = useState<string>('');
+const [monthlyLimit, setMonthlyLimit] = useState<string>('');
 
   const handleLogout = () => {
     logout();
@@ -81,6 +83,50 @@ const [monthlyReport, setMonthlyReport] = useState<{
     { value: '11', label: 'November' },
     { value: '12', label: 'December' }
   ];
+
+  const fetchSpendingIndicator = async () => {
+  try {
+    const response = await apiService.getSpendingIndicator();
+    setSpendingIndicator(response?.data?.spending_indicator ?? null);
+  } catch (error) {
+    console.error('Error fetching spending indicator:', error);
+  }
+};
+
+
+const fetchMonthlyLimit = async() => {
+  try{
+    const response = await apiService.getMonthlyLimit();
+    setMonthlyLimit(response?.data?.monthly_limit ?? null);
+  }catch(error){
+    console.error('Error fetching monthly limit:',error);
+  }
+};
+
+
+
+const getBudgetStatus = () => {
+  switch (spendingIndicator) {
+    case 'Green':
+      return { status: 'Within Budget', color: 'bg-green-500' };
+    case 'Orange':
+      return { status: 'Over Budget', color: 'bg-orange-500' };
+    case 'Red':
+    case 'Critical':
+      return { status: 'Critically Over Budget', color: 'bg-red-500' };
+    default:
+      return { status: 'Unknown', color: 'bg-gray-500' };
+  }
+};
+
+useEffect(()=>{
+  fetchMonthlyLimit();
+},[]);
+
+useEffect(() => {
+  fetchSpendingIndicator();
+}, []);
+
 
   useEffect(() => {
     fetchTransactions();
@@ -146,6 +192,37 @@ useEffect(() => {
     
     fetchMonthlyReport();
   }, [transactions]);
+
+
+//   useEffect(() => {
+//   const fetchBudgetLimit = async () => {
+//     try {
+//       const response = await apiService.getBudgetLimit(); // You’ll define this later
+//       setBudgetLimit(response.data.budget || 0);
+//     } catch (error) {
+//       console.error('Error fetching budget limit:', error);
+//     }
+//   };
+
+//   fetchBudgetLimit();
+// }, []);
+
+const handleSetBudgetLimit = async () => {
+  const value = parseFloat(inputLimit);
+  if (!isNaN(value)) {
+    try {
+      await apiService.setMonthlyLimit(value);
+      setMonthlyLimit(value.toString()); // Update UI immediately
+      await fetchSpendingIndicator(); // Optional extra fetch
+      console.log('Monthly limit set successfully');
+    } catch (error) {
+      console.error('Error setting monthly limit:', error);
+    }
+  }
+};
+
+
+
 
   return (
     <div className="min-h-screen bg-slate-900 text-white">
@@ -293,128 +370,91 @@ useEffect(() => {
 
           {/* Right Column */}
           <div className="space-y-6">
-            
-                  {/* ₹{monthlyReport.totalSpent} */}
             <div className="bg-slate-800/50 border border-slate-700 rounded-2xl p-6">
               <h2 className="text-lg font-semibold mb-4 text-blue-400">Monthly Report</h2>
-              
               <div className="space-y-4">
                 <div className="bg-slate-700/30 rounded-lg p-4">
                   <div className="flex items-center space-x-2 mb-2">
                     <DollarSign className="w-5 h-5 text-green-400" />
                     <span className="text-sm font-medium text-slate-300">Total Spent in Current Month</span>
                   </div>
-                  <p className="text-2xl font-bold text-white">
-                   ₹{monthlyReport.totalSpent.toFixed(2)}
-                  </p>
+                     <p className="text-2xl font-bold text-white">
+                       ₹{monthlyReport.totalSpent.toFixed(2)}
+                      </p>
+                   </div>
+
+                 { /* Set Monthly Limit */}
+                <div className="bg-slate-700/30 rounded-lg p-4">
+                  <div className="flex items-center space-x-2 mb-2">
+                    <DollarSign className="w-5 h-5 text-green-400" />
+                    <span className="text-sm font-medium text-slate-300">Set Monthly Budget Limit</span>
+                  </div>
+                  <div className="flex space-x-2">
+                    <input
+                      type="number"
+                      value={inputLimit}
+                      onChange={(e) => setInputLimit(e.target.value)}
+                      placeholder="Enter limit in ₹"
+                      className="w-full bg-slate-700 border border-slate-600 rounded-lg px-3 py-2 text-white placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                    />
+                   <button
+  onClick={handleSetBudgetLimit}
+  className="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg transition"
+>
+  Set
+</button>
+
+                  </div>
+                  <br/>
+                  <div className="flex items-center space-x-2 mb-2">
+                    <DollarSign className="w-5 h-5 text-green-400" />
+                    <span className="text-sm font-medium text-slate-300">Current Monthly Limit :</span>
+                    <p className="text-2xl font-bold text-white">
+                       ₹{monthlyLimit}
+                      </p>
+                  </div>
                 </div>
-                
+
+                <div className="bg-slate-700/30 rounded-lg p-4">
+                  <div className="flex items-center space-x-2 mb-2">
+                    <CreditCard className="w-5 h-5 text-purple-400" />
+                    <span className="text-sm font-medium text-slate-300">Budget Status</span>
+                  </div>
+                  <div className="flex items-center space-x-4">
+                    <div className={`h-4 w-4 rounded-full ${getBudgetStatus().color}`}></div>
+                    <span className="text-white font-medium">{getBudgetStatus().status}</span>
+                  </div>
+                </div>
+
                 <div className="bg-slate-700/30 rounded-lg p-4">
                   <div className="flex items-center space-x-2 mb-2">
                     <TrendingDown className="w-5 h-5 text-orange-400" />
                     <span className="text-sm font-medium text-slate-300">Category Wise Spent</span>
                   </div>
                   <div className="space-y-2">
-                    {/* <div className="flex items-center space-x-2">
-                      <span className="bg-blue-600 text-xs px-2 py-1 rounded">Category(Mens)</span>
-                      <span className="bg-green-600 text-xs px-2 py-1 rounded">Type(Spending)</span>
-                    </div> */}
-                    <div className="space-y-2">
-                       {Object.entries(monthlyReport.categoryBreakdown).length === 0 ? (
-                    <p className="text-slate-400 text-sm">No category data available</p>
-                  ) : (
-                    Object.entries(monthlyReport.categoryBreakdown).map(([rawKey, amount], index) => {
+                    {Object.entries(monthlyReport.categoryBreakdown).length === 0 ? (
+                      <p className="text-slate-400 text-sm">No category data available</p>
+                    ) : (
+                      Object.entries(monthlyReport.categoryBreakdown).map(([rawKey, amount], index) => {
                         const match = rawKey.match(/^\d+:(.+)$/);
-                          const category = match ? match[1] : rawKey;
+                        const category = match ? match[1] : rawKey;
 
-                            return (
-                             <div key={rawKey} className="flex justify-between items-center">
-                              <span className="text-slate-400 mr-2">{index + 1}.</span>
+                        return (
+                          <div key={rawKey} className="flex justify-between items-center">
+                            <span className="text-slate-400 mr-2">{index + 1}.</span>
                             <span className="bg-blue-600 text-xs px-2 py-1 rounded">{category}</span>
                             <span className="text-white font-medium ml-auto">₹{Number(amount).toFixed(2)}</span>
-                             </div>
-                             );
-                                 })
-
-                              )}
-                    </div>
+                          </div>
+                        );
+                      })
+                    )}
                   </div>
                 </div>
               </div>
             </div>
-
-            {/* Student Profile
-            <div className="bg-slate-800/50 border border-slate-700 rounded-2xl p-6">
-              <h2 className="text-lg font-semibold mb-4 text-blue-400">Student Profile</h2>
-              <div className="space-y-3">
-                <div>
-                  <span className="text-sm text-slate-400">Student Name</span>
-                  <p className="text-white font-medium">{user?.name}</p>
-                </div>
-                <div>
-                  <span className="text-sm text-slate-400">Student Email</span>
-                  <p className="text-white font-medium">{user?.email}</p>
-                </div>
-                <div>
-                  <span className="text-sm text-slate-400">Member Since</span>
-                  <p className="text-white font-medium">
-                    {user?.memberSince ? new Date(user.memberSince).toLocaleDateString() : 'N/A'}
-                  </p>
-                  {Object.entries(monthlyReport.categoryBreakdown).length === 0 ? (
-                    <p className="text-slate-400 text-sm">No category data available</p>
-                  ) : (
-                    Object.entries(monthlyReport.categoryBreakdown).map(([category, amount]) => (
-                      <div key={category} className="flex justify-between items-center">
-                        <span className="bg-blue-600 text-xs px-2 py-1 rounded">{category}</span>
-                        <span className="text-white font-medium"> ₹{Number(amount).toFixed(2)}</span>
-                      </div>
-                    ))
-                  )}
-                </div>
-              </div>
-            </div> */}
           </div>
         </div>
-
-        {/* AI Chat Bot
-        <div className="bg-slate-800/50 border border-slate-700 rounded-2xl p-6">
-          <div className="flex items-center space-x-2 mb-4">
-            <div className="w-8 h-8 bg-blue-600 rounded-full flex items-center justify-center">
-              <Bot className="w-5 h-5 text-white" />
-            </div>
-            <h2 className="text-lg font-semibold text-blue-400">Let's chat about your Expenditure</h2>
-          </div>
-          
-          <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-            <div>
-              <label className="block text-sm font-medium text-slate-300 mb-2">Student Query</label>
-              <textarea
-                value={chatQuery}
-                onChange={(e) => setChatQuery(e.target.value)}
-                placeholder="Ask me anything about your finances..."
-                className="w-full h-24 bg-slate-700 border border-slate-600 rounded-lg px-3 py-2 text-white placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-blue-500 resize-none"
-              />
-            </div>
-            
-            <div>
-              <label className="block text-sm font-medium text-slate-300 mb-2">Bot's Answer</label>
-              <div className="h-24 bg-slate-700/30 border border-slate-600 rounded-lg px-3 py-2 text-slate-300 overflow-y-auto">
-                {chatResponse || "Ask me a question and I'll help you understand your spending patterns!"}
-              </div>
-            </div>
-          </div>
-          
-          <div className="mt-4 flex justify-end">
-            <button
-              // onClick={handleChatSubmit}
-              className="flex items-center space-x-2 bg-blue-600 hover:bg-blue-700 px-4 py-2 rounded-lg transition-colors"
-            >
-              <Send className="w-4 h-4" />
-              <span>Ask</span>
-            </button>
-          </div>
-        </div> */}
-      </div>
+      </div>      
     </div>
   );
 };

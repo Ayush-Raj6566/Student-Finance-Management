@@ -156,7 +156,71 @@ getTransactions: async (filters: { student_id: string; year?: number; month?: nu
     if (!response.ok) throw new Error('Failed to add transaction');
 
     return response.json();
+  },
+
+setMonthlyLimit: async (limit: number) => {
+  const token = localStorage.getItem("token"); // get token from storage
+  try {
+    const response = await axios.post(
+      `${API_BASE_URL}/home/set_monthly_limit/${limit}`,
+      {
+        user_query: "Set my monthly budget",
+      },
+      {
+        headers: {
+          Authorization: `Bearer ${token}`, // ← this is required
+        },
+      }
+    );
+    return response.data;
+  } catch (error) {
+    console.error("Failed to set monthly limit:", error);
+    throw error;
   }
+},
+
+
+getMonthlyLimit: async() => {
+  const token = localStorage.getItem("token");
+  try{
+    const response = await axios.get(
+      `${API_BASE_URL}/home/get_monthly_limit`,
+      {
+        headers:{
+          Authorization: `Bearer ${token}`,
+        },
+      }
+    );
+    return response.data;
+  } catch(error){
+    console.error('Failed to fetch Monthly Limit:',error);
+    throw error;
+  }
+},
+
+
+
+getSpendingIndicator: async () => {
+  const token = localStorage.getItem("token"); // ⬅️ get your saved token
+  try {
+    const response = await axios.get(
+      `${API_BASE_URL}/home/get_spending_indicator`,
+      {
+        headers: {
+          Authorization: `Bearer ${token}`, // ⬅️ add token here
+        },
+      }
+    );
+    return response.data;
+  } catch (error) {
+    console.error('Failed to fetch spending indicator:', error);
+    throw error;
+  }
+}
+
+
+
+
 };
 
 //   updateTransaction: async (transactionId: string, transactionData: any) => {
