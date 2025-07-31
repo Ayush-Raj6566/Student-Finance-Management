@@ -8,6 +8,7 @@ import AddTransaction from './components/AddTransaction';
 import ChatBot from './components/ChatBot';
 import Profile from './components/Profile';
 import Transactions from './components/Transactions';
+import MonthlySummary from './components/MonthlySummary';
 // import Reports from './components/Reports';
 // import Analytics from './components/Analytics';
 // import Budget from './components/Budget';
@@ -60,6 +61,14 @@ function App() {
               element={
                 <ProtectedRoute>
                   <Transactions />
+                </ProtectedRoute>
+              } 
+            />
+            <Route 
+              path="/monthly-summary" 
+              element={
+                <ProtectedRoute>
+                  <MonthlySummary />
                 </ProtectedRoute>
               } 
             />

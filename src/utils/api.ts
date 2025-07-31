@@ -136,6 +136,21 @@ getTransactions: async (filters: { student_id: string; year?: number; month?: nu
   },
 
 
+  // ✅ Monthly Summary
+  getMonthlySummary: async () => {
+    const response = await fetch(`http://127.0.0.1:8000/agent/prev_month_summary`, {
+      method: 'GET',
+      headers: {
+        'Authorization': `Bearer ${localStorage.getItem('token')}`,
+        'Content-Type': 'application/json'
+      }
+    });
+
+    if (!response.ok) throw new Error('Failed to fetch monthly summary');
+
+    return response.json();
+  },
+
  addTransaction: async (transactionData: {
   transaction_amount: number;
   transaction_category: string;
