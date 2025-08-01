@@ -24,7 +24,7 @@ const Sidebar: React.FC<SidebarProps> = ({ isOpen, onClose }) => {
 
   const menuItems = [
     { icon: Bot, label: 'Student Bot', path: '/chat', color: 'text-green-400' },
-    { icon: Calendar, label: 'Monthly Summary', path: '/monthly-summary', color: 'text-blue-400'}
+    { icon: Calendar,label: 'Month Summary Report', path: '/monthly-summary', color: 'text-blue-400'}
     // { icon: Home, label: 'Dashboard', path: '/dashboard', color: 'text-blue-400' },
     // { icon: CreditCard, label: 'Transactions', path: '/transactions', color: 'text-purple-400' },
     // { icon: PieChart, label: 'Reports', path: '/reports', color: 'text-orange-400' },

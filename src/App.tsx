@@ -8,13 +8,14 @@ import AddTransaction from './components/AddTransaction';
 import ChatBot from './components/ChatBot';
 import Profile from './components/Profile';
 import Transactions from './components/Transactions';
-import MonthlySummary from './components/MonthlySummary';
+// import MonthlySummary from './components/MonthlySummary';
 // import Reports from './components/Reports';
 // import Analytics from './components/Analytics';
 // import Budget from './components/Budget';
 // import Settings from './components/Settings';
 // import Help from './components/Help';
 import ProtectedRoute from './components/ProtectedRoute';
+import MonthlySummary from './components/MonthlySummary';
 
 function App() {
   return (
@@ -64,7 +65,7 @@ function App() {
                 </ProtectedRoute>
               } 
             />
-            <Route 
+             <Route 
               path="/monthly-summary" 
               element={
                 <ProtectedRoute>

@@ -50,7 +50,7 @@ const MonthlySummary: React.FC = () => {
         throw new Error('No authentication token found');
       }
 
-      const response = await fetch('http://127.0.0.1:8000/agent/prev_month_summary', {
+      const response = await fetch('https://studget.onrender.com/agent/prev_month_summary', {
         method: 'GET',
         headers: {
           'Authorization': `Bearer ${token}`,
