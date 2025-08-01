@@ -235,7 +235,7 @@ const MonthlySummary: React.FC = () => {
               <Calendar className="w-6 h-6 text-white" />
             </div>
             <div>
-              <h1 className="text-xl font-bold">Monthly Spending Summary</h1>
+              <h1 className="text-xl font-bold">Monthly Summary</h1>
               <p className="text-sm text-slate-400">Analyze your spending patterns and trends</p>
             </div>
           </div>
